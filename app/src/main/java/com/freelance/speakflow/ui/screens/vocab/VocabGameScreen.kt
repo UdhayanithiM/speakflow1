@@ -1,6 +1,6 @@
 package com.freelance.speakflow.ui.screens.vocab
 
-import android.widget.Toast
+import android.speech.tts.TextToSpeech
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -9,94 +9,85 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.freelance.speakflow.data.RetrofitInstance
+import com.freelance.speakflow.data.VocabAnswerResult
 import com.freelance.speakflow.data.VocabListenClickResponse
-import com.freelance.speakflow.ui.theme.PurplePrimary
+import java.util.Locale
 
 @Composable
 fun VocabGameScreen(
     category: String,
-    onGameComplete: (Int) -> Unit
+    onGameComplete: (List<VocabAnswerResult>) -> Unit
 ) {
     val context = LocalContext.current
 
-    // ---------------- STATE ----------------
     var response by remember { mutableStateOf<VocabListenClickResponse?>(null) }
-    var currentQuestionIndex by remember { mutableIntStateOf(0) }
-    var score by remember { mutableIntStateOf(0) }
+    var index by remember { mutableIntStateOf(0) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // ---------------- API CALL ----------------
-    LaunchedEffect(category) {
-        try {
-            response = RetrofitInstance.api.getVocabListenClick(category)
-        } catch (e: Exception) {
-            Toast.makeText(
-                context,
-                "Failed to load game",
-                Toast.LENGTH_SHORT
-            ).show()
-        } finally {
-            isLoading = false
-        }
-    }
+    val results = remember { mutableStateListOf<VocabAnswerResult>() }
 
-    // ---------------- LOADING ----------------
-    if (isLoading) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(color = PurplePrimary)
-        }
-        return
-    }
+    // -------- TTS --------
+    var tts: TextToSpeech? by remember { mutableStateOf(null) }
+    var ttsReady by remember { mutableStateOf(false) }
 
-    // ---------------- SAFETY ----------------
-    val questions = response?.payload?.questions
-    if (questions.isNullOrEmpty()) {
-        Toast.makeText(context, "No questions available", Toast.LENGTH_SHORT).show()
-        onGameComplete(score)
-        return
-    }
-
-    val currentQuestion = questions[currentQuestionIndex]
-
-    // ---------------- GAME UI ----------------
-    VocabGameLayout(
-        currentQuestion = currentQuestion,
-        questionIndex = currentQuestionIndex,
-        totalQuestions = questions.size,
-
-        onPlayAudio = {
-            Toast.makeText(
-                context,
-                "Playing audio for: ${currentQuestion.targetWord}",
-                Toast.LENGTH_SHORT
-            ).show()
-        },
-
-        onOptionSelected = { selectedOptionId ->
-
-            // backend never sends word in options — only image + id
-            val isCorrect = currentQuestion.options
-                .first { it.id == selectedOptionId }
-                .image == currentQuestion.targetWord
-
-            if (isCorrect) {
-                score += 1
-                Toast.makeText(context, "Correct!", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(
-                    context,
-                    "Wrong! Answer: ${currentQuestion.targetWord}",
-                    Toast.LENGTH_SHORT
-                ).show()
+    DisposableEffect(Unit) {
+        tts = TextToSpeech(context) {
+            if (it == TextToSpeech.SUCCESS) {
+                tts?.language = Locale.US
+                ttsReady = true
             }
+        }
+        onDispose {
+            tts?.shutdown()
+        }
+    }
 
-            if (currentQuestionIndex < questions.lastIndex) {
-                currentQuestionIndex++
+    fun speak(word: String) {
+        if (ttsReady) {
+            tts?.speak(word, TextToSpeech.QUEUE_FLUSH, null, null)
+        }
+    }
+
+    // -------- API --------
+    LaunchedEffect(category) {
+        response = RetrofitInstance.api.getVocabListenClick(category, 1)
+        isLoading = false
+    }
+
+    if (isLoading || response == null) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    // 🔽 LIMIT QUESTIONS HERE (REDUCE ROUNDS)
+    val questions = response!!.payload.questions.take(5)
+    val question = questions[index]
+
+    LaunchedEffect(index) {
+        speak(question.targetWord)
+    }
+
+    VocabGameLayout(
+        currentQuestion = question,
+        questionIndex = index,
+        totalQuestions = questions.size,
+        onPlayAudio = { speak(question.targetWord) },
+        onOptionSelected = { selectedId ->
+
+            results.add(
+                VocabAnswerResult(
+                    word = question.targetWord,
+                    image = question.options.first { it.id == selectedId }.image,
+                    isCorrect = selectedId == question.correctOptionId
+                )
+            )
+
+            if (index < questions.lastIndex) {
+                index++
             } else {
-                onGameComplete(score)
+                onGameComplete(results.toList())
             }
         }
     )

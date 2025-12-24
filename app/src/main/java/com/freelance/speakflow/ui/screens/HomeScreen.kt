@@ -24,7 +24,11 @@ fun HomeScreen(
                 dashboardData = RetrofitInstance.api.getDashboard(userId)
             } catch (e: Exception) {
                 e.printStackTrace()
-                Toast.makeText(context, "Error loading: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    context,
+                    "Error loading: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
             } finally {
                 isLoading = false
             }
@@ -35,10 +39,31 @@ fun HomeScreen(
         data = dashboardData,
         isLoading = isLoading,
         onModuleClick = { moduleId ->
-            if (moduleId == "grammar") { // Locked example
-                Toast.makeText(context, "This module is locked!", Toast.LENGTH_SHORT).show()
-            } else {
-                onNavigateToGame(moduleId)
+            when (moduleId) {
+                "vocab" -> {
+                    onNavigateToGame("vocab")
+                }
+
+                "speaking" -> {
+                    onNavigateToGame("speaking")
+                }
+
+                "grammar" -> {
+                    onNavigateToGame("grammar")
+                }
+
+                // ✅ UPDATED: Now navigates to Situations
+                "situations" -> {
+                    onNavigateToGame("situations")
+                }
+
+                else -> {
+                    Toast.makeText(
+                        context,
+                        "Unknown module: $moduleId",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         }
     )

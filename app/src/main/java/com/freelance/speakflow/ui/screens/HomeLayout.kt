@@ -31,8 +31,11 @@ fun HomeLayout(
     onModuleClick: (String) -> Unit
 ) {
     if (isLoading || data == null) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = PurplePrimary)
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
         }
         return
     }
@@ -40,7 +43,7 @@ fun HomeLayout(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.LightGray)
+            .background(Color(0xFFF5F5F5)) // Slightly lighter gray for better look
             .padding(horizontal = 16.dp)
     ) {
 
@@ -59,10 +62,10 @@ fun HomeLayout(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        "Daily\nProgress",
+                        text = "Daily\nProgress",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = TextDark,
+                        color = Color.Black,
                         modifier = Modifier.weight(1f)
                     )
 
@@ -71,7 +74,10 @@ fun HomeLayout(
                         color = Color(0xFFFFF3BF)
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                            modifier = Modifier.padding(
+                                horizontal = 14.dp,
+                                vertical = 8.dp
+                            ),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
@@ -81,9 +87,10 @@ fun HomeLayout(
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                "${data.dayStreak} Day\nStreak",
+                                text = "${data.dayStreak} Day\nStreak",
                                 fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.Black
                             )
                         }
                     }
@@ -95,8 +102,9 @@ fun HomeLayout(
                     progress = { data.levelProgress },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(10.dp),
-                    color = PurplePrimary,
+                        .height(10.dp)
+                        .clip(RoundedCornerShape(5.dp)),
+                    color = MaterialTheme.colorScheme.primary,
                     trackColor = Color.LightGray.copy(alpha = 0.4f)
                 )
 
@@ -107,14 +115,14 @@ fun HomeLayout(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        "${data.totalXp} / 1000 XP to Level ${data.currentLevel}",
+                        text = "${data.totalXp} / 1000 XP to Level ${data.currentLevel}",
                         fontSize = 13.sp,
-                        color = TextGray
+                        color = Color.Gray
                     )
                     Text(
-                        "${(data.levelProgress * 100).toInt()} %",
+                        text = "${(data.levelProgress * 100).toInt()}%",
                         fontSize = 13.sp,
-                        color = TextGray
+                        color = Color.Gray
                     )
                 }
             }
@@ -127,7 +135,7 @@ fun HomeLayout(
             text = "Learn & Practice",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = Color.Black // Changed to Black to be visible on Light bg
         )
 
         Spacer(Modifier.height(16.dp))
@@ -145,6 +153,7 @@ fun ModuleCard(
     module: ModuleItem,
     onClick: (String) -> Unit
 ) {
+    // Map IDs to Drawables
     val imageRes = when (module.id) {
         "vocab" -> R.drawable.vocubalary
         "speaking" -> R.drawable.speaking
@@ -157,9 +166,14 @@ fun ModuleCard(
         modifier = Modifier
             .fillMaxWidth()
             .height(120.dp)
-            .clickable { onClick(module.id) },
+            .clickable(enabled = !module.locked) {
+                onClick(module.id)
+            },
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(
+            containerColor = if (module.locked) Color(0xFFE0E0E0) else Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (module.locked) 0.dp else 4.dp)
     ) {
         Row(
             modifier = Modifier
@@ -171,13 +185,15 @@ fun ModuleCard(
             Box(
                 modifier = Modifier
                     .size(56.dp)
-                    .clip(CircleShape),
+                    .clip(CircleShape)
+                    .background(if (module.locked) Color.Gray.copy(alpha = 0.2f) else Color.Transparent),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
                     painter = painterResource(id = imageRes),
                     contentDescription = module.title,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(40.dp),
+                    alpha = if (module.locked) 0.5f else 1f
                 )
             }
 
@@ -188,14 +204,26 @@ fun ModuleCard(
                     text = module.title,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextDark
+                    color = if (module.locked) Color.Gray else Color.Black
                 )
+
                 Spacer(Modifier.height(4.dp))
+
                 Text(
                     text = module.subtitle,
                     fontSize = 13.sp,
-                    color = TextGray
+                    color = Color.Gray
                 )
+
+                if (module.locked) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "Locked",
+                        fontSize = 12.sp,
+                        color = Color.Red,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
     }
@@ -214,12 +242,12 @@ fun HomePreview() {
         modules = listOf(
             ModuleItem("vocab", "Vocabulary", "Learn new words", "book", false),
             ModuleItem("speaking", "Speaking", "Practice pronunciation", "mic", false),
-            ModuleItem("grammar", "Grammar", "Master the rules", "edit", false),
-            ModuleItem("situations", "Situations", "Real-life scenarios", "chat", false)
+            ModuleItem("grammar", "Grammar", "Master the rules", "edit", false), // Unlocked for preview
+            ModuleItem("situations", "Situations", "Real-life scenarios", "chat", true)
         )
     )
 
     SpeakFlowTheme {
-        HomeLayout(dummyData, false, {})
+        HomeLayout(dummyData, false) {}
     }
 }

@@ -13,16 +13,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.freelance.speakflow.data.VocabPreviewItem
+import com.freelance.speakflow.ui.components.NetworkImage // Import the new component
 import com.freelance.speakflow.ui.theme.PurplePrimary
 
 @Composable
 fun VocabPreviewLayout(
     items: List<VocabPreviewItem>,
-    onListenClick: (String) -> Unit,
+    onListenClick: (String) -> Unit, // Passes the Audio URL
     onStartGame: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -32,21 +33,14 @@ fun VocabPreviewLayout(
             .padding(16.dp)
     ) {
 
-        // 🔝 HEADER WITH BACK
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        // 🔝 HEADER
+        Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Back"
-                )
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
             }
-
             Spacer(Modifier.width(8.dp))
-
             Text(
-                text = "Preview",
+                text = "Preview - Level 1", // You can make this dynamic later
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -54,6 +48,7 @@ fun VocabPreviewLayout(
 
         Spacer(Modifier.height(12.dp))
 
+        // 📜 LIST OF WORDS
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.weight(1f)
@@ -63,6 +58,7 @@ fun VocabPreviewLayout(
             }
         }
 
+        // ▶ START BUTTON
         Button(
             onClick = onStartGame,
             modifier = Modifier
@@ -71,11 +67,7 @@ fun VocabPreviewLayout(
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = PurplePrimary)
         ) {
-            Text(
-                text = "Start Game",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Text(text = "Start Game", fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -88,7 +80,8 @@ private fun PreviewCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(
             modifier = Modifier
@@ -96,17 +89,18 @@ private fun PreviewCard(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                painter = painterResource(id = item.imageRes),
+            // 🖼️ AI GENERATED IMAGE
+            NetworkImage(
+                url = item.image,
                 contentDescription = item.word,
                 modifier = Modifier
-                    .size(64.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-                tint = Color.Unspecified
+                    .size(70.dp)
+                    .clip(RoundedCornerShape(12.dp))
             )
 
             Spacer(Modifier.width(16.dp))
 
+            // 🔤 WORD
             Text(
                 text = item.word,
                 fontSize = 18.sp,
@@ -114,11 +108,14 @@ private fun PreviewCard(
                 modifier = Modifier.weight(1f)
             )
 
-            IconButton(onClick = { onListenClick(item.word) }) {
+            // 🔊 AI AUDIO BUTTON
+            IconButton(onClick = { onListenClick(item.word) })
+            {
                 Icon(
                     Icons.Default.VolumeUp,
                     contentDescription = "Listen",
-                    tint = PurplePrimary
+                    tint = PurplePrimary,
+                    modifier = Modifier.size(28.dp)
                 )
             }
         }

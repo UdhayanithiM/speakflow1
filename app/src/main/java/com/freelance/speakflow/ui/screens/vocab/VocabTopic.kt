@@ -1,7 +1,9 @@
 package com.freelance.speakflow.ui.screens.vocab
 
+import androidx.annotation.DrawableRes
+
 data class VocabTopic(
     val id: String,
     val title: String,
-    val imageRes: Int // you control images
+    @DrawableRes val imageRes: Int
 )

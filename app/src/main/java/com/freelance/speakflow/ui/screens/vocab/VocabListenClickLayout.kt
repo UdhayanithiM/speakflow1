@@ -19,7 +19,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.freelance.speakflow.data.QuizQuestion
-import com.freelance.speakflow.ui.theme.PurplePrimary
 
 @Composable
 fun VocabListenClickLayout(
@@ -27,84 +26,93 @@ fun VocabListenClickLayout(
     index: Int,
     total: Int,
     onPlayAudio: () -> Unit,
-    onOptionClick: (String) -> Unit   // OPTION ID
+    onOptionClick: (String) -> Unit // Returns Option ID
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        // Progress
-        LinearProgressIndicator(
-            progress = { (index + 1) / total.toFloat() },
+    Scaffold { paddingValues ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(8.dp),
-            color = PurplePrimary
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        Text(
-            text = "Question ${index + 1} / $total",
-            color = Color.Gray
-        )
-
-        Spacer(Modifier.height(32.dp))
-
-        Text(
-            text = "Listen and choose the correct image",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(Modifier.height(24.dp))
-
-        // AUDIO BUTTON
-        IconButton(
-            onClick = onPlayAudio,
-            modifier = Modifier
-                .size(80.dp)
-                .clip(RoundedCornerShape(40.dp))
-                .background(PurplePrimary)
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                Icons.Default.VolumeUp,
-                contentDescription = "Play Audio",
-                tint = Color.White,
-                modifier = Modifier.size(36.dp)
+
+            // Progress Bar
+            LinearProgressIndicator(
+                progress = { (index + 1) / total.toFloat() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
             )
-        }
 
-        Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(12.dp))
 
-        // IMAGE OPTIONS
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(question.options) { option ->
-                Card(
-                    modifier = Modifier
-                        .height(140.dp)
-                        .fillMaxWidth()
-                        .clickable {
-                            // ✅ FIXED: PASS OPTION ID, NOT WORD
-                            onOptionClick(option.id)
-                        },
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+            Text(
+                text = "Question ${index + 1} of $total",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(Modifier.height(32.dp))
+
+            Text(
+                text = "Listen and choose the correct image",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            Spacer(Modifier.height(32.dp))
+
+            // AUDIO BUTTON
+            IconButton(
+                onClick = onPlayAudio,
+                modifier = Modifier
+                    .size(90.dp)
+                    .clip(RoundedCornerShape(45.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.VolumeUp,
+                    contentDescription = "Play Audio",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(40.dp)
+                )
+            }
+
+            Spacer(Modifier.height(40.dp))
+
+            // IMAGE OPTIONS
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(question.options) { option ->
+                    Card(
+                        modifier = Modifier
+                            .height(150.dp)
+                            .fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        onClick = { onOptionClick(option.id) }
                     ) {
-                        Text(
-                            text = option.image,
-                            fontSize = 48.sp
-                        )
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            // !!! IMPORTANT !!!
+                            // Currently rendering Emojis based on your code.
+                            // If backend sends URLs, switch this to AsyncImage(model = option.image)
+                            Text(
+                                text = option.image,
+                                fontSize = 56.sp
+                            )
+                        }
                     }
                 }
             }

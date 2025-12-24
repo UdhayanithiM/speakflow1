@@ -59,7 +59,12 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
+    implementation("io.coil-kt:coil-compose:2.5.0")
 
+    // 🔊 Media3 ExoPlayer (For streaming AI audio)
+    implementation("androidx.media3:media3-exoplayer:1.2.0")
+    implementation("androidx.media3:media3-ui:1.2.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
     // ---------------- ICONS ----------------
     implementation("androidx.compose.material:material-icons-extended")
 
